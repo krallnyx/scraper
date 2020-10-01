@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup #needed to map the webpages
 import requests # needed to get the webpage passed to bs4
 import csv # to export results as a CSV file
 import shutil # to download images
+import os # to be able to create/check directories
 
 
 class Scraper:
@@ -13,6 +14,8 @@ class Scraper:
         self.csv_lines = []
         self.category_index = 0
         self.current_url = ""
+        os.makedirs("CSV")
+        os.makedirs("images")
 
     def create_categories(self):
         html_page = requests.get(self.root_url)
