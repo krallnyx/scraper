@@ -5,12 +5,28 @@ import csv
 
 class Scraper:
     def __init__(self):
-        self.category_url = "http://books.toscrape.com/catalogue/category/books/sequential-art_5/"
-        self.current_url = self.category_url + "index.html"
+        self.root_url = "http://books.toscrape.com/index.html"
+        self.categories_url = "http://books.toscrape.com/catalogue/category/books/"
+        self.category_list = []
         self.books_url = []
         self.csv_lines = []
+        self.category_index = 0
+        self.current_url = ""
+
+    def create_categories(self):
+        html_page = requests.get(self.root_url)
+        soup = BeautifulSoup(html_page.text, 'html.parser')
+        # For each link in the page we extract the URL and replace the root link to the http one
+        for cat in soup.find_all("div", {"class": "side_categories"}):
+            for link in cat.find_all('a'):
+                self.category_list.append(str(link)[34:].split('/', 1)[0])
+        # the first category is a link to the root, need to be dropped
+        self.category_list.pop(0)
+
 
     def create_urls(self):
+        self.current_url = self.categories_url + self.category_list[self.category_index] + "/index.html"
+        print(f"scraping books in : {self.category_list[self.category_index]}...")
         # Creating a list of URL for each book by gathering them from a Category page
         while True:
             # Creating the soup for each page (only one if there is less than 21 books in the category)
@@ -22,7 +38,7 @@ class Scraper:
             next_url = str(soup.find("li", {"class": "next"}))[26:].split('"', 1)[0]
             if not next_url:
                 break
-            self.current_url = self.category_url + next_url
+            self.current_url = self.categories_url + self.category_list[self.category_index] + next_url
 
     def scrape(self):
         for link in self.books_url:
@@ -73,8 +89,10 @@ class Scraper:
                                    image_url])
 
     def save_to_csv(self):
+        #creating the filename
+        filename = self.category_list[self.category_index].split('_')[0] + ".csv"
         # writing the headers in the CSV file
-        with open('books.csv', 'w', newline='', encoding="utf-8") as csvfile:
+        with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             header = ["product_page_url",
                       "universal_ product_code (upc)",
@@ -91,9 +109,16 @@ class Scraper:
                 writer.writerow(book)
 
     def run(self):
-        self.create_urls()
-        self.scrape()
-        self.save_to_csv()
+        self.create_categories()
+        for cat in self.category_list:
+            self.create_urls()
+            self.scrape()
+            self.save_to_csv()
+
+            # getting ready for the next category
+            self.category_index += 1
+            self.books_url = []
+            self.csv_lines = []
 
 
 if __name__ == "__main__":
