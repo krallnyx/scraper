@@ -90,7 +90,7 @@ class Scraper:
 
     def save_to_csv(self):
         #creating the filename
-        filename = self.category_list[self.category_index].split('_')[0] + ".csv"
+        filename = "export/" + self.category_list[self.category_index].split('_')[0] + ".csv"
         # writing the headers in the CSV file
         with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
