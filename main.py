@@ -71,12 +71,12 @@ class Scraper:
             price_excluding_tax = results[2][1:]
             # removing the text around the numbers of units available
             number_available = results[5][10:-11]
-            # product description is the 4th <p>, we re-use the list var as we don't need it anymore
+            # product description is the 4th <p> re-using results as we don't need it anymore
             results = []
             for i in soup.find_all('p'):
                 results.append(i.getText())
             product_description = results[3]
-            # category is in the the 3rd <li>, we re-use the list var as we don't need it anymore
+            # category is in the the 3rd <li> re-using results as we don't need it anymore
             results = []
             for i in soup.find_all('li'):
                 results.append(i.getText())
@@ -97,19 +97,21 @@ class Scraper:
                                    category,
                                    review_rating,
                                    image_url])
+            self.save_images(product_page_url, image_url)
 
-            #for each book, we save it's cover image to the Images folder
-            request = requests.get(image_url, stream = True)
-            if request.status_code == 200:
-                # we put all image files in the image folder
-                # we use the name in the product page URL as the title is often too long
-                # we pick the fileformat from the url in case they are not all .jpg
-                with open("images/" +
-                          product_page_url[36:-11].split('_')[0] +
-                          "." + image_url.split('.')[-1], 'wb') as file:
-                    request.raw.decode_content = True
-                    shutil.copyfileobj(request.raw, file)
-
+    @classmethod
+    def save_images(cls, product_page_url, image_url):
+        """for each book, we save it's cover image to the Images folder"""
+        request = requests.get(image_url, stream = True)
+        if request.status_code == 200:
+            # we put all image files in the image folder
+            # we use the name in the product page URL as the title is often too long
+            # we pick the fileformat from the url in case they are not all .jpg
+            with open("images/" +
+                        product_page_url[36:-11].split('_')[0] +
+                        "." + image_url.split('.')[-1], 'wb') as file:
+                request.raw.decode_content = True
+                shutil.copyfileobj(request.raw, file)
 
 
     def save_to_csv(self):
