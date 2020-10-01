@@ -1,5 +1,5 @@
 .idea/
 __pycache__/
 venv/
-*.csv
-export/
+images/*.*
+CSV/*.*

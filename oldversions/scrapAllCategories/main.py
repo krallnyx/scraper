@@ -1,7 +1,6 @@
-from bs4 import BeautifulSoup #needed to map the webpages
-import requests # needed to get the webpage passed to bs4
-import csv # to export results as a CSV file
-import shutil # to download images
+from bs4 import BeautifulSoup
+import requests
+import csv
 
 
 class Scraper:
@@ -76,8 +75,7 @@ class Scraper:
             category = list[2][1:-1]
             # removing the first chracters of the string and what's after the 1st remaining "
             review_rating = str(soup.find("p", {"class": "star-rating"}))[22:].split('"', 1)[0]
-            # the URL to the image is based on the root of the website, translated to a real URL by removing the first 6 chars
-            image_url = "http://books.toscrape.com/" + soup.find('img')['src'][6:]
+            image_url = soup.find('img')['src']
 
             self.csv_lines.append([product_page_url,
                                    universal_product_code,
@@ -91,15 +89,7 @@ class Scraper:
                                    image_url])
 
             #for each book, we save it's cover image to the Images folder
-            # we already have image_url for example = "../../media/cache/f4/07/f407d3bbf457d35701dfe72ee9ef3b68.jpg"
-
-            r = requests.get(image_url, stream = True)
-            if r.status_code == 200:
-                # we put all image files in the image folder and use the name in the product page URL as the title is often too long
-                # we pick the fileformat from the url in case they are not all .jpg
-                with open("images/" + product_page_url[36:-11].split('_')[0] + "." + image_url.split('.')[-1], 'wb') as f:
-                    r.raw.decode_content = True
-                    shutil.copyfileobj(r.raw, f)
+            # we already have image_url = "../../ media / cache / f4 / 07 / f407d3bbf457d35701dfe72ee9ef3b68.jpg"
 
 
 
