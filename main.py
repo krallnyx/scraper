@@ -2,8 +2,10 @@
 import csv # to export results as a CSV file
 import shutil # to download images
 import os # to be able to create/check directories
+import re # to fix ' and " in the description
 import requests # needed to get the webpage passed to bs4
 from bs4 import BeautifulSoup #needed to map the webpages
+
 
 
 class Scraper:
@@ -56,14 +58,12 @@ class Scraper:
         """with the product page link provided, gather every information to the list 'csv_lines'"""
         for product_page_url in self.books_url:
             soup = BeautifulSoup(requests.get(product_page_url).text, 'html.parser')
-
             # extracting all the TR attributes as they'll be used later for needed results:
             # 0 UPC 1 product type 2 price (excl. tax) 3 Price (incl. tax)
             # 4 tax 5 Availability 6 Number of reviews
             results = []
             for i in soup.find_all('tr'):
                 results.append(i.find('td').getText())
-
             universal_product_code = results[0]
             title = soup.find('h1').getText()
             # prices have a weird character in front of them, needs to be removed
@@ -75,14 +75,17 @@ class Scraper:
             results = []
             for i in soup.find_all('p'):
                 results.append(i.getText())
-            product_description = results[3]
+            # due to the way the HTML is done, there are weird characters replacing quotes
+            product_description = results[3].replace("â", "'")
+            # once the quote are put back, we also remove the 2 characters after it
+            product_description = re.sub(r"[^\x20-\x7E]", "", product_description)
             # category is in the the 3rd <li> re-using results as we don't need it anymore
             results = []
             for i in soup.find_all('li'):
                 results.append(i.getText())
             # removing the new lines before and after the text
             category = results[2][1:-1]
-            # removing the first chracters of the string and what's after the 1st remaining "
+            # removing the first characters of the string and what's after the 1st remaining "
             review_rating = str(soup.find("p", {"class": "star-rating"}))[22:].split('"', 1)[0]
             # the URL to the image is based on the website, translated by removing the first 6 chars
             image_url = "http://books.toscrape.com/" + soup.find('img')['src'][6:]
@@ -119,7 +122,7 @@ class Scraper:
         #creating the filename
         filename = "CSV/" + self.category_list[self.category_index].split('_')[0] + ".csv"
         # writing the headers in the CSV file
-        with open(filename, 'w', newline='', encoding="latin-1") as csvfile:
+        with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             header = ["product_page_url",
                       "universal_ product_code (upc)",
@@ -142,6 +145,7 @@ class Scraper:
             self.create_urls()
             self.scrape()
             self.save_to_csv()
+
 
             # getting ready for the next category
             self.category_index += 1
