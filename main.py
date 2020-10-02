@@ -67,8 +67,8 @@ class Scraper:
             universal_product_code = results[0]
             title = soup.find('h1').getText()
             # prices have a weird character in front of them, needs to be removed
-            price_including_tax = results[3][1:]
-            price_excluding_tax = results[2][1:]
+            price_including_tax = results[3][2:]
+            price_excluding_tax = results[2][2:]
             # removing the text around the numbers of units available
             number_available = results[5][10:-11]
             # product description is the 4th <p> re-using results as we don't need it anymore
@@ -119,7 +119,7 @@ class Scraper:
         #creating the filename
         filename = "CSV/" + self.category_list[self.category_index].split('_')[0] + ".csv"
         # writing the headers in the CSV file
-        with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
+        with open(filename, 'w', newline='', encoding="latin-1") as csvfile:
             writer = csv.writer(csvfile)
             header = ["product_page_url",
                       "universal_ product_code (upc)",
